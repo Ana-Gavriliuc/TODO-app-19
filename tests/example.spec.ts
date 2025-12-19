@@ -1,18 +1,70 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import {Home} from "../page-objects/pages/Home";
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
+test('TL-19-1 Check item creation', async ({ page }) => {
+    const home = new Home(page);
+    await home.goto();
+    const item1 = await home.createItem("TEST1");
+    await item1.checkItemVisible();
 });
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+test('TL-19-2 Check two items creation', async ({ page }) => {
+    const home = new Home(page);
+    await home.goto();
+    const item1 = await home.createItem("TEST 1");
+    await item1.checkItemVisible();
+    const item2 = await home.createItem("TEST 2");
+    await item2.checkItemVisible();
+    await home.checkCountOfItems(2);
+});
 
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Get started' }).click();
+test('TL-19-3 Check item activation', async ({ page }) => {
+    const home = new Home(page);
+    await home.goto();
+    const item1 = await home.createItem("TEST1");
+    await item1.checkItemVisible();
+    await item1.checkIsMarked(false);
+    await item1.markAsCompleted();
+    await item1.checkIsMarked(true);
+});
 
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+test('TL-19-4 Check item deletion', async ({ page }) => {
+    const home = new Home(page);
+    await home.goto();
+    const item1 = await home.createItem("TEST1");
+    await item1.checkItemVisible();
+    await item1.deleteItem();
+    await item1.checkItemVisible(false);
+    await home.checkCountOfItems(0);
+});
+
+test('TL-19-5 Check clear completed button usage', async ({ page }) => {
+    const home = new Home(page);
+    await home.goto();
+    const item1 = await home.createItem("TEST 1");
+    const item2 = await home.createItem("TEST 2 ");
+    await item1.checkItemVisible(true);
+    await item2.checkItemVisible(true);
+    await item2.markAsCompleted();
+    await home.checkCountOfItems(2);
+    await home.clickClearCompletedButton();
+    await home.checkCountOfItems(1)
+    await item1.checkItemVisible(true);
+    await item2.checkItemVisible(false);
+});
+
+test('TL-19-6 Check completed filter activation', async ({ page }) => {
+    const home = new Home(page);
+    await home.goto();
+    const item1 = await home.createItem('TEST 1');
+    const item2 = await home.createItem('TEST 2');
+    const item3 = await home.createItem('TEST 3');
+    await item1.checkItemVisible(true);
+    await item2.checkItemVisible(true);
+    await item3.checkItemVisible(true);
+    await home.checkCountOfItems(3);
+    await item2.markAsCompleted();
+    await home.checkCountOfItems(3);
+    await home.clickCompletedButton();
+    await home.checkVisibleItemsCount(1);
 });
